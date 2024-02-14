@@ -57,6 +57,10 @@ client.on("interactionCreate", async (interaction) => {
           });
         }
 
+        // Remove all roles except for the 'Prisoner' role
+        const otherRoles = targetUser.roles.cache.filter(role => role.id !== prisonerRole.id);
+        await targetUser.roles.remove(otherRoles);
+
         targetUser.roles
           .add(prisonerRole)
           .then(() => {
