@@ -38,6 +38,21 @@ client.on("interactionCreate", async (interaction) => {
 
   const user = interaction.options.getUser("user");
 
+  // Get the member object of the user
+  const member = interaction.guild.members.cache.get(user.id);
+
+  // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
+  const hasRestrictedRole = member.roles.cache.some((role) =>
+    rolesToCheck.includes(role.name)
+  ) || member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
+
+  if (hasRestrictedRole) {
+    interaction.reply(
+      "You cannot jail a user who has one of the restricted roles or the 'bot' role."
+    );
+    return;
+  }
+
   const hasRequiredRole = interaction.member.roles.cache.some((role) =>
     rolesToCheck.includes(role.name),
   );
