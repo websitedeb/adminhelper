@@ -42,13 +42,13 @@ client.on("interactionCreate", async (interaction) => {
   const member = interaction.guild.members.cache.get(user.id);
 
   // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
-  const hasRestrictedRole = member.roles.cache.some((role) =>
-    rolesToCheck.includes(role.name)
-  ) || member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
+  const hasRestrictedRole =
+    member.roles.cache.some((role) => rolesToCheck.includes(role.name)) ||
+    member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
 
   if (hasRestrictedRole) {
     interaction.reply(
-      "You cannot jail a user who has one of the restricted roles or the 'bot' role."
+      "You cannot jail a user who has one of the restricted roles or the 'bot' role.",
     );
     return;
   }
@@ -73,7 +73,9 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         // Remove all roles except for the 'Prisoner' role
-        const otherRoles = targetUser.roles.cache.filter(role => role.id !== prisonerRole.id);
+        const otherRoles = targetUser.roles.cache.filter(
+          (role) => role.id !== prisonerRole.id,
+        );
         await targetUser.roles.remove(otherRoles);
 
         targetUser.roles
