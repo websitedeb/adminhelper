@@ -30,73 +30,133 @@ client.once("ready", () => {
         },
       ],
     });
+
+    guild.commands.create({
+      name: "timeout",
+      description: "Put a user in timeout",
+      options: [
+        {
+          name: "user",
+          description: "The user to put in timeout",
+          type: 6,
+          required: true,
+        },
+        {
+          name: "time",
+          description: "The duration of timeout in minutes",
+          type: 4, // Integer type
+          required: true,
+        },
+      ],
+    });
   });
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isCommand() || interaction.commandName !== "jail") return;
+  if (!interaction.isCommand()) return;
 
-  const user = interaction.options.getUser("user");
+  const { commandName, options, member, guild } = interaction;
 
-  // Get the member object of the user
-  const member = interaction.guild.members.cache.get(user.id);
+  if (commandName === "jail" || commandName === "timeout") {
+    const user = options.getUser("user");
+    const time = options.getInteger("time");
 
-  // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
-  const hasRestrictedRole = member.roles.cache.some((role) =>
-    rolesToCheck.includes(role.name)
-  ) || member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
+    const targetUser = guild.members.cache.get(user.id);
 
-  if (hasRestrictedRole) {
-    interaction.reply(
-      "You cannot jail a user who has one of the restricted roles or the 'bot' role."
-    );
-    return;
-  }
+    // Check if the user has any of the restricted roles or the role named "bot"
+    const hasRestrictedRole = member.roles.cache.some((role) =>
+      rolesToCheck.includes(role.name)
+    ) || member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
 
-  const hasRequiredRole = interaction.member.roles.cache.some((role) =>
-    rolesToCheck.includes(role.name),
-  );
-
-  if (hasRequiredRole) {
-    if (user) {
-      const targetUser = interaction.guild.members.cache.get(user.id);
-
-      if (targetUser) {
-        let prisonerRole = interaction.guild.roles.cache.find(
-          (role) => role.name === "Prisoner",
-        );
-        if (!prisonerRole) {
-          prisonerRole = await interaction.guild.roles.create({
-            name: "Prisoner",
-            reason: "Role required for jail command",
-          });
-        }
-
-        // Remove all roles except for the 'Prisoner' role
-        const otherRoles = targetUser.roles.cache.filter(role => role.id !== prisonerRole.id);
-        await targetUser.roles.remove(otherRoles);
-
-        targetUser.roles
-          .add(prisonerRole)
-          .then(() => {
-            interaction.reply(`Successfully jailed ${user.tag}.`);
-          })
-          .catch((error) => {
-            console.error("Error adding role:", error);
-            interaction.reply("Failed to jail the user.");
-          });
-      } else {
-        interaction.reply("User not found.");
-      }
-    } else {
-      interaction.reply("User not provided.");
+    if (hasRestrictedRole) {
+      interaction.reply(
+        "You cannot perform this action on a user who has one of the restricted roles or the 'bot' role."
+      );
+      return;
     }
-  } else {
-    interaction.reply(
-      "You do not have the required roles to use this command.",
+
+    const hasRequiredRole = member.roles.cache.some((role) =>
+      rolesToCheck.includes(role.name)
     );
+
+    if (!hasRequiredRole) {
+      interaction.reply(
+        "You do not have the required roles to use this command."
+      );
+      return;
+    }
+
+    if (!user || !time) {
+      interaction.reply("Please provide both a user and a time.");
+      return;
+    }
+
+    if (commandName === "jail") {
+      handleJail(interaction, targetUser);
+    } else if (commandName === "timeout") {
+      handleTimeout(interaction, targetUser, time);
+    }
   }
 });
+
+async function handleJail(interaction, user) {
+  let prisonerRole = interaction.guild.roles.cache.find(
+    (role) => role.name === "Prisoner"
+  );
+  if (!prisonerRole) {
+    prisonerRole = await interaction.guild.roles.create({
+      name: "Prisoner",
+      reason: "Role required for jail command",
+    });
+  }
+
+  const otherRoles = user.roles.cache.filter(
+    (role) => role.id !== prisonerRole.id
+  );
+  await user.roles.remove(otherRoles);
+
+  user.roles
+    .add(prisonerRole)
+    .then(() => {
+      interaction.reply(`Successfully jailed ${user.user.tag}.`);
+    })
+    .catch((error) => {
+      console.error("Error adding role:", error);
+      interaction.reply("Failed to jail the user.");
+    });
+}
+
+async function handleTimeout(interaction, user, time) {
+  let timeoutRole = interaction.guild.roles.cache.find(
+    (role) => role.name === "Timeout"
+  );
+  if (!timeoutRole) {
+    timeoutRole = await interaction.guild.roles.create({
+      name: "Timeout",
+      reason: "Role required for timeout command",
+    });
+  }
+
+  const otherRoles = user.roles.cache.filter(
+    (role) => role.id !== timeoutRole.id
+  );
+  await user.roles.remove(otherRoles);
+
+  user.roles
+    .add(timeoutRole)
+    .then(() => {
+      interaction.reply(
+        `Successfully put ${user.user.tag} in timeout for ${time} minutes.`
+      );
+      setTimeout(() => {
+        user.roles.remove(timeoutRole);
+      }, time * 60000); // Convert minutes to milliseconds
+    })
+    .catch((error) => {
+      console.error("Error adding role:", error);
+      interaction.reply("Failed to put the user in timeout.");
+    });
+}
 
 keepAlive();
 client.login(token);
