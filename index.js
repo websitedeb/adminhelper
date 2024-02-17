@@ -30,15 +30,6 @@ client.once("ready", () => {
         },
       ],
     });
-
-    // Removing the /timeout command
-    const commands = guild.commands.cache;
-    const timeoutCommand = commands.find(cmd => cmd.name === 'timeout');
-    if (timeoutCommand) {
-      timeoutCommand.delete()
-        .then(() => console.log("Removed /timeout command from guild:", guild.name))
-        .catch(console.error);
-    }
   });
 });
 
@@ -111,3 +102,4 @@ client.on("interactionCreate", async (interaction) => {
 
 keepAlive();
 client.login(token);
+
