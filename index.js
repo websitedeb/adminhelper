@@ -7,11 +7,10 @@ const token = process.env.DISCORD_TOKEN;
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const rolesToCheck = [
-  "Second Man AculOn",
-  "Head Directive Administrator/ Head Developer",
+  "Head Directive Administrator/ developer manager",
   "First Man Xeodsa",
   "Group God Spicyy",
-  "Detective Colin",
+  "Moderator",
   "Directive Administrator/ developer manager",
   "Community manager"
 ];
