@@ -21,152 +21,160 @@ client.once("ready", () => {
   console.log("Bot is ready!");
 
   client.guilds.cache.forEach((guild) => {
-    guild.commands.create({
-      name: "jail",
-      description: "Jail a user",
-      options: [
-        {
-          name: "user",
-          description: "The user to jail",
-          type: 6,
-          required: true,
-        },
-      ],
-    });
+    guild.commands.bulkOverwrite([
+      {
+        name: "jail",
+        description: "Jail a user",
+        options: [
+          {
+            name: "user",
+            description: "The user to jail",
+            type: 6,
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "gayify",
+        description: "Give the '🏳️‍🌈gay' role to a user",
+        options: [
+          {
+            name: "user",
+            description: "The user to gayify",
+            type: 6,
+            required: true,
+          },
+        ],
+      },
+    ]);
   });
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isCommand() || interaction.commandName !== "jail") return;
+  if (!interaction.isCommand()) return;
 
-  let user = interaction.options.getUser("user");
+  if (interaction.commandName === "jail") {
+    let user = interaction.options.getUser("user");
 
-  // Get the member object of the user
-  let member = interaction.guild.members.cache.get(user.id);
+    // Get the member object of the user
+    let member = interaction.guild.members.cache.get(user.id);
 
-  // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
-  let hasRestrictedRole =
-    member.roles.cache.some((role) => rolesToCheck.includes(role.name)) ||
-    member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
+    // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
+    let hasRestrictedRole =
+      member.roles.cache.some((role) => rolesToCheck.includes(role.name)) ||
+      member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
 
-  if (hasRestrictedRole) {
-    interaction.reply(
-      "You cannot jail a user who has one of the restricted roles or the 'bot' role.",
+    if (hasRestrictedRole) {
+      interaction.reply(
+        "You cannot jail a user who has one of the restricted roles or the 'bot' role.",
+      );
+      return;
+    }
+
+    let hasRequiredRole = interaction.member.roles.cache.some((role) =>
+      rolesToCheck.includes(role.name),
     );
-    return;
-  }
 
-  let hasRequiredRole = interaction.member.roles.cache.some((role) =>
-    rolesToCheck.includes(role.name),
-  );
+    if (hasRequiredRole) {
+      if (user) {
+        let targetUser = interaction.guild.members.cache.get(user.id);
 
-  if (hasRequiredRole) {
-    if (user) {
-      let targetUser = interaction.guild.members.cache.get(user.id);
+        if (targetUser) {
+          let prisonerRole = interaction.guild.roles.cache.find(
+            (role) => role.name === "Prisoner",
+          );
+          if (!prisonerRole) {
+            prisonerRole = await interaction.guild.roles.create({
+              name: "Prisoner",
+              reason: "Role required for jail command",
+            });
+          }
 
-      if (targetUser) {
-        let prisonerRole = interaction.guild.roles.cache.find(
-          (role) => role.name === "Prisoner",
-        );
-        if (!prisonerRole) {
-          prisonerRole = await interaction.guild.roles.create({
-            name: "Prisoner",
-            reason: "Role required for jail command",
-          });
+          // Remove all roles except for the 'Prisoner' role
+          let otherRoles = targetUser.roles.cache.filter(
+            (role) => role.id !== prisonerRole.id,
+          );
+          await targetUser.roles.remove(otherRoles);
+
+          targetUser.roles
+            .add(prisonerRole)
+            .then(() => {
+              interaction.reply(`Successfully jailed ${user.tag}.`);
+            })
+            .catch((error) => {
+              console.error("Error adding role:", error);
+              interaction.reply("Failed to jail the user.");
+            });
+        } else {
+          interaction.reply("User not found.");
         }
-
-        // Remove all roles except for the 'Prisoner' role
-        let otherRoles = targetUser.roles.cache.filter(
-          (role) => role.id !== prisonerRole.id,
-        );
-        await targetUser.roles.remove(otherRoles);
-
-        targetUser.roles
-          .add(prisonerRole)
-          .then(() => {
-            interaction.reply(`Successfully jailed ${user.tag}.`);
-          })
-          .catch((error) => {
-            console.error("Error adding role:", error);
-            interaction.reply("Failed to jail the user.");
-          });
       } else {
-        interaction.reply("User not found.");
+        interaction.reply("User not provided.");
       }
     } else {
-      interaction.reply("User not provided.");
+      interaction.reply(
+        "You do not have the required roles to use this command.",
+      );
     }
-  } else {
-    interaction.reply(
-      "You do not have the required roles to use this command.",
+  } else if (interaction.commandName === "gayify") {
+    let user = interaction.options.getUser("user");
+
+    // Get the member object of the user
+    let member = interaction.guild.members.cache.get(user.id);
+
+    // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
+    let hasRestrictedRole =
+      member.roles.cache.some((role) => rolesToCheck.includes(role.name)) ||
+      member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
+
+    if (hasRestrictedRole) {
+      interaction.reply(
+        "You cannot gayify a user who has one of the restricted roles or the 'bot' role.",
+      );
+      return;
+    }
+
+    let hasRequiredRole = interaction.member.roles.cache.some((role) =>
+      rolesToCheck.includes(role.name),
     );
-  }
-});
 
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isCommand() || interaction.commandName !== "gayify") return;
+    if (hasRequiredRole) {
+      if (user) {
+        let targetUser = interaction.guild.members.cache.get(user.id);
 
-  let user = interaction.options.getUser("user");
+        if (targetUser) {
+          let gayRole = interaction.guild.roles.cache.find(
+            (role) => role.name === "🏳️‍🌈gay",
+          );
+          if (!gayRole) {
+            gayRole = await interaction.guild.roles.create({
+              name: "🏳️‍🌈gay",
+              reason: "Role required for gayify command",
+              color: "#FF69B4", // Set a pink color for the gay role
+            });
+          }
 
-  // Get the member object of the user
-  let member = interaction.guild.members.cache.get(user.id);
-
-  // Check if the user has any of the roles in rolesToCheck or has the role named "bot"
-  let hasRestrictedRole =
-    member.roles.cache.some((role) => rolesToCheck.includes(role.name)) ||
-    member.roles.cache.some((role) => role.name.toLowerCase() === "bot");
-
-  if (hasRestrictedRole) {
-    interaction.reply(
-      "You cannot gayify a user who has one of the restricted roles or the 'bot' role.",
-    );
-    return;
-  }
-
-  let hasRequiredRole = interaction.member.roles.cache.some((role) =>
-    rolesToCheck.includes(role.name),
-  );
-
-  if (hasRequiredRole) {
-    if (user) {
-      let targetUser = interaction.guild.members.cache.get(user.id);
-
-      if (targetUser) {
-        let prisonerRole = interaction.guild.roles.cache.find(
-          (role) => role.name === "🏳️‍🌈gay",
-        );
-        if (!prisonerRole) {
-          prisonerRole = await interaction.guild.roles.create({
-            name: "🏳️‍🌈gay",
-            reason: "Role required for gayify command",
-          });
+          // Add the '🏳️‍🌈gay' role to the user
+          targetUser.roles
+            .add(gayRole)
+            .then(() => {
+              interaction.reply(`Successfully gayified ${user.tag}.`);
+            })
+            .catch((error) => {
+              console.error("Error adding role:", error);
+              interaction.reply("Failed to gayify the user.");
+            });
+        } else {
+          interaction.reply("User not found.");
         }
-
-        // Remove all roles except for the 'Prisoner' role
-        let otherRoles = targetUser.roles.cache.filter(
-          (role) => role.id !== prisonerRole.id,
-        );
-        await targetUser.roles.remove(otherRoles);
-
-        targetUser.roles
-          .add(prisonerRole)
-          .then(() => {
-            interaction.reply(`Successfully gay'ed ${user.tag}.`);
-          })
-          .catch((error) => {
-            console.error("Error adding role:", error);
-            interaction.reply("Failed to gay the user.");
-          });
       } else {
-        interaction.reply("User not found.");
+        interaction.reply("User not provided.");
       }
     } else {
-      interaction.reply("User not provided.");
+      interaction.reply(
+        "You do not have the required roles to use this command.",
+      );
     }
-  } else {
-    interaction.reply(
-      "You do not have the required roles to use this command.",
-    );
   }
 });
 
