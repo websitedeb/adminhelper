@@ -8,45 +8,44 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const rolesToCheck = [
   "Head mod",
-  "Admin",
-  "Head Directive Administrator/Head Developer",
+  "Senior  Mod",
+  "Junior Mod",
+  "Moderator",
+  "Head Directive Administrator/ Head Developer",
   "Group God Spicyy",
-  "Second Man Xeodax",
-  "Third Man Acolon",
-  "Group leader",
-  "Developer admin",
+  "First Man Xeodsa",
+  "Directive Administrator/ developer manager",
 ];
 
 client.once("ready", () => {
   console.log("Bot is ready!");
 
   client.guilds.cache.forEach((guild) => {
-    guild.commands.bulkOverwrite([
-      {
-        name: "jail",
-        description: "Jail a user",
-        options: [
-          {
-            name: "user",
-            description: "The user to jail",
-            type: 6,
-            required: true,
-          },
-        ],
-      },
-      {
-        name: "gayify",
-        description: "Give the '🏳️‍🌈gay' role to a user",
-        options: [
-          {
-            name: "user",
-            description: "The user to gayify",
-            type: 6,
-            required: true,
-          },
-        ],
-      },
-    ]);
+    guild.commands.create({
+      name: "jail",
+      description: "Jail a user",
+      options: [
+        {
+          name: "user",
+          description: "The user to jail",
+          type: 6,
+          required: true,
+        },
+      ],
+    });
+
+    guild.commands.create({
+      name: "gayify",
+      description: "Give the '🏳️‍🌈gay' role to a user",
+      options: [
+        {
+          name: "user",
+          description: "The user to gayify",
+          type: 6,
+          required: true,
+        },
+      ],
+    });
   });
 });
 
